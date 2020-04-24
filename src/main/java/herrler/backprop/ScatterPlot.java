@@ -3,6 +3,7 @@ package herrler.backprop;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Shape;
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.jfree.chart.ChartFactory;
@@ -23,12 +24,14 @@ import org.nd4j.linalg.factory.Nd4j;
 import kotlin.Pair;
 
 public class ScatterPlot extends ApplicationFrame {
-	
+
 	private static final long serialVersionUID = 1L;
 	private static ChartPanel jpanel;
+	private static ArrayList<INDArray> allX;
 
 	/**
-	 *  The number of examples to create 
+	 * The number of examples to create
+	 * 
 	 * @param net
 	 * @param examples
 	 * @return
@@ -36,9 +39,15 @@ public class ScatterPlot extends ApplicationFrame {
 	static Pair<INDArray, INDArray> createFeaturesAndLabels(NeuralNet net, int examples) {
 		INDArray features = Nd4j.create(new float[] {}, 0, net.getInputSize());
 		INDArray labels = Nd4j.create(new float[] {}, 0, net.getOutputSize());
-		Nd4j.getRandom().setSeed(3000);
-		for (int s = 0; s < examples; s++) {
-			INDArray x = Nd4j.rand(net.getInputSize(), 1);
+		if (allX == null) {
+			Nd4j.getRandom().setSeed(3000);
+			allX = new ArrayList<INDArray>();
+			for (int s = 0; s < examples; s++) {
+				allX.add(Nd4j.rand(net.getInputSize(), 1));
+			}
+		}
+
+		for (INDArray x : allX) {
 			features = Nd4j.concat(0, features, x.transpose());
 
 			INDArray y = net.forward(x);
@@ -47,9 +56,29 @@ public class ScatterPlot extends ApplicationFrame {
 		return new Pair<INDArray, INDArray>(features, labels);
 	}
 
-	public static ScatterPlot plotTrainingData(String plotName, INDArray features, INDArray labels, int featureNr, String outputvalName) {
+	static Pair<INDArray, INDArray> createFeaturesAndLabels2(NeuralNet net, int examples) {
+		INDArray features = Nd4j.create(new float[] {}, 0, net.getInputSize());
+		INDArray labels = Nd4j.create(new float[] {}, 0, net.getOutputSize());
+		Nd4j.getRandom().setSeed(3000);
+		for (int x1 = 0; x1 < examples; x1++) {
+			for (int x2 = 0; x2 < examples; x2++) {
+				float erg1 = x1 * 0.1f / examples;
+				float erg2 = x2 * 0.1f / examples;
+				INDArray x = Nd4j.rand(net.getInputSize(), 1);
+				Nd4j.create(new float[] { erg1, erg2 }, net.getInputSize(), 1);
+				features = Nd4j.concat(0, features, x.transpose());
+
+				INDArray y = net.forward(x);
+				labels = Nd4j.concat(0, labels, y.transpose());
+			}
+		}
+		return new Pair<INDArray, INDArray>(features, labels);
+	}
+
+	public static ScatterPlot plotTrainingData(String plotName, INDArray features, INDArray labels, int featureNr,
+			String outputvalName) {
 		XYSeriesCollection xySeriesCollection = createXYSeries(features, labels, featureNr, outputvalName);
-		ScatterPlot scatterplotdemo4 = new ScatterPlot(plotName +  " " + (featureNr +1), xySeriesCollection,
+		ScatterPlot scatterplotdemo4 = new ScatterPlot(plotName + " " + (featureNr + 1), xySeriesCollection,
 				new Dimension(400, 300), featureNr);
 		scatterplotdemo4.pack();
 		RefineryUtilities.centerFrameOnScreen(scatterplotdemo4);
@@ -74,7 +103,7 @@ public class ScatterPlot extends ApplicationFrame {
 		xySeriesCollection.addSeries(negative);
 		return xySeriesCollection;
 	}
-	
+
 	public ScatterPlot(String title, XYDataset data, Dimension dimension, int shapeType) {
 		super(title);
 		JFreeChart jfreechart = createFreeChart(title, data, shapeType);
@@ -82,15 +111,15 @@ public class ScatterPlot extends ApplicationFrame {
 		jpanel.setPreferredSize(dimension);
 		add(jpanel);
 	}
-	
+
 	public void update(String plotName, INDArray features, INDArray labels, int featureNr, String outputvalName) {
 		XYSeriesCollection xySeriesCollection = createXYSeries(features, labels, featureNr, outputvalName);
 		update(plotName, xySeriesCollection, featureNr);
 	}
-	
+
 	public void update(String title, XYDataset data, int shapeType) {
 		JFreeChart jfreechart = createFreeChart(title, data, shapeType);
-		jpanel.setChart(jfreechart);		
+		jpanel.setChart(jfreechart);
 	}
 
 	private static JFreeChart createFreeChart(String title, XYDataset data, int shapeType) {
@@ -149,15 +178,15 @@ public class ScatterPlot extends ApplicationFrame {
 	}
 
 	public static void showOutputs(ScatterPlot plot, String plotName, NeuralNet net) {
-		Pair<INDArray, INDArray> pair = ScatterPlot.createFeaturesAndLabels(net,120);
+		Pair<INDArray, INDArray> pair = ScatterPlot.createFeaturesAndLabels(net, 120);
+		// Pair<INDArray, INDArray> pair = ScatterPlot.createFeaturesAndLabels(net,
+		// 120);
 		for (int i = 0; i < net.getOutputSize(); i++)
 			plot.update(plotName, pair.getFirst(), pair.getSecond(), i, "a");
 	}
 
 	public void showOutputs(String plotName, NeuralNet net) {
-		Pair<INDArray, INDArray> pair = ScatterPlot.createFeaturesAndLabels(net,120);
-		for (int i = 0; i < net.getOutputSize(); i++)
-			update(plotName, pair.getFirst(), pair.getSecond(), i, "a");
-	}		
+		showOutputs(this, plotName, net);
+	}
 
 }

@@ -1,6 +1,8 @@
 package herrler.backprop;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +38,9 @@ public class ErrorPlot extends ApplicationFrame{
 		ErrorPlot errorPlot = new ErrorPlot();
 		errorPlot.pack();
 		RefineryUtilities.centerFrameOnScreen(errorPlot);
+		Rectangle size = errorPlot.getBounds();
+        errorPlot.setBounds(size.x-size.width, size.y, size.width, size.height);
+
 		errorPlot.setVisible(true);
 		return errorPlot;
 	}

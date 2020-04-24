@@ -70,14 +70,16 @@ public class NeuralNet {
 		ScatterPlot plot = ScatterPlot.openWindow();
 		ErrorPlot errorPlot = ErrorPlot.openWindow();
 
-		for (int s = 0; s < 100001; s++) {
+		for (int s = 0; s < 20801; s++) {
+			//if (s==10000)
+			
 			INDArray x = Nd4j.rand(2, 1); // create random 2d verctor as a sample
 			
 			float expected = (x.getFloat(0) > 0.5f && x.getFloat(1) > 0.5f) ? 1f : 0f;
 			INDArray labelvector = Nd4j.create(new float[] { expected }, new int[] { 1, 1 }, 'c');
 			float error = net.fit(x,labelvector);
 			errorPlot.add(error);
-			if (s!=0 && s % 2000 ==0) {
+			if (s!=0 && s % 200 ==0) {
 				plot.showOutputs("Samples "+s, net);
 			}
 		}
