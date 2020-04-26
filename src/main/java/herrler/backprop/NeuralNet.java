@@ -29,49 +29,33 @@ public class NeuralNet {
 		return a;		
 	}
 	
-	public int getOutputSize() {
-		return (int) layers[layers.length - 1].getOutputSize();
-	}
-
-	public int getInputSize() {
-		return (int) layers[0].getInputSize();
-	}
-
 	public float fit(INDArray x, INDArray yGiven) {
+		// do the forward pass
 		INDArray y = forward(x);
+		// calculate errors and local gradients
 		float e1 = calcMSEError(yGiven, y);
 		INDArray localGradients = calcMSEGradients(yGiven, y);
+		// backpropagation through all layers
 		for (int i = layers.length - 1; i >= 0; i--) {
 			localGradients = layers[i].backprop(localGradients, learningRate);
 		}
 		System.out.printf("Error : %f  \n", e1);
 		return e1;
 	}
-	
-
-
-	private static INDArray calcMSEGradients(INDArray yGround, INDArray y) {
-		return yGround.sub(y).mul(-1);
-	}
-
-	private static float calcMSEError(INDArray yGround, INDArray y) {
-		INDArray diff = yGround.sub(y);
-		diff = diff.muli(diff);
-		INDArray sum = Nd4j.sum(diff);
-		return sum.getFloat(0, 0);
-	}
 
 	public static void main(String[] args) {
 		Nd4j.getRandom().setSeed(7000);
+		
+		// Create the neural network
 		Layer layer1 = new Layer(2, 2, ActivationFunction.LeakyRelu);
 		Layer layer2 = new Layer(2, 1, ActivationFunction.Sigmoid);
 		NeuralNet net = new NeuralNet(layer1, layer2);
 		
+		// Initialize Graphics
 		ScatterPlot plot = ScatterPlot.openWindow();
 		ErrorPlot errorPlot = ErrorPlot.openWindow();
 
 		for (int s = 0; s < 20801; s++) {
-			//if (s==10000)
 			
 			INDArray x = Nd4j.rand(2, 1); // create random 2d verctor as a sample
 			
@@ -83,8 +67,22 @@ public class NeuralNet {
 				plot.showOutputs("Samples "+s, net);
 			}
 		}
-		net.printParameters(); // print resulting net
+		
+		// print resulting net parameters
+		net.printParameters(); 
 	}
+	
+	private static INDArray calcMSEGradients(INDArray yGround, INDArray y) {
+		return yGround.sub(y).mul(-1);
+	}
+
+	private static float calcMSEError(INDArray yGround, INDArray y) {
+		INDArray diff = yGround.sub(y);
+		diff = diff.muli(diff);
+		INDArray sum = Nd4j.sum(diff);
+		return sum.getFloat(0, 0);
+	}
+
 
 	/**
 	 * Print parameters of all Layers
@@ -97,5 +95,13 @@ public class NeuralNet {
 			System.out.println("Weights:" + layer.weights);
 			System.out.println("Biases:" + layer.biases.transpose());
 		}
+	}
+	
+	public int getOutputSize() {
+		return (int) layers[layers.length - 1].getOutputSize();
+	}
+
+	public int getInputSize() {
+		return (int) layers[0].getInputSize();
 	}
 }
